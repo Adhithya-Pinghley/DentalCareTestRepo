@@ -1,0 +1,20 @@
+2023/08/02-09:06:53.095 2534 Reusing MANIFEST D:\DentalCareTestRepo\tokens\test\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2023/08/02-09:06:53.095 2534 Recovering log #141
+2023/08/02-09:06:53.210 2534 Reusing old log D:\DentalCareTestRepo\tokens\test\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/000141.log 
+2023/08/02-09:07:52.058 6c Level-0 table #150: started
+2023/08/02-09:07:52.242 6c Level-0 table #150: 1220543 bytes OK
+2023/08/02-09:07:52.270 6c Delete type=0 #141
+2023/08/02-09:08:04.478 6c Compacting 1@1 + 5@2 files
+2023/08/02-09:08:04.941 6c Generated table #151@1: 80346 keys, 2253891 bytes
+2023/08/02-09:08:05.299 6c Generated table #152@1: 19007 keys, 2174926 bytes
+2023/08/02-09:08:05.591 6c Generated table #153@1: 18753 keys, 2214107 bytes
+2023/08/02-09:08:05.911 6c Generated table #154@1: 73499 keys, 2215632 bytes
+2023/08/02-09:08:06.034 6c Generated table #155@1: 19019 keys, 417845 bytes
+2023/08/02-09:08:06.034 6c Compacted 1@1 + 5@2 files => 9276401 bytes
+2023/08/02-09:08:06.048 6c compacted to: files[ 0 0 5 0 0 0 0 ]
+2023/08/02-09:08:06.048 6c Delete type=2 #143
+2023/08/02-09:08:06.048 6c Delete type=2 #144
+2023/08/02-09:08:06.048 6c Delete type=2 #145
+2023/08/02-09:08:06.048 6c Delete type=2 #146
+2023/08/02-09:08:06.048 6c Delete type=2 #147
+2023/08/02-09:08:06.048 6c Delete type=2 #150

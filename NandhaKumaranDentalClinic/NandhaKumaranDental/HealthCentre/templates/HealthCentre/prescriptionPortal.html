@@ -65,18 +65,18 @@ NDC-Prescription
     <table class = "prescription-table">
         <thead>
           <tr>
-            <th>  </th>
             <th>Patient Name</th>
             <th>Symptoms</th>
           </tr>
         </thead>
         <tbody>
           {% for prescription in prescriptions %}    
-            <tr class="prescription-row">
-                <td><button class="tree-toggle" data-prescription-id="{{ prescription.id }}">Edit</button></td>
+            <tr class="prescription-row">    
                 <!-- <div id="prescription-details-{{ prescription.id }}" class="prescription-details"></div>   -->
               <td>{{ prescription.prescribingPatient }}</td>
               <td>{{ prescription.symptoms }}</td>
+              <td><a class="button" href ="{% url 'editPrescription' prescription.id %}">Edit</a></td>
+              <td><a class="button" href ="{% url 'deleteprescription' prescription.id %}">Delete</a></td>
             </tr>
             <tr class="prescription-details">
                 <td>Doctor Name : {{ prescription.prescribingDoctor }} </td>

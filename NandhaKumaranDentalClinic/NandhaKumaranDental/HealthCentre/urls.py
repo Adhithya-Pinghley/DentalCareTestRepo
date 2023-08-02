@@ -19,6 +19,8 @@ urlpatterns = [
     path('doctorappointmentsfalse', views.doctorappointmentsfalse, name = "doctorappointmentsfalse"),
     path('editAppointments/<pk>', views.editAppointments, name = 'editAppointments'),
     path('deleteappointment/<pk>', views.deleteappointment, name = 'deleteappointment'),
+    path('editPrescription/<pk>', views.editPrescription, name = 'editPrescription'),
+    path('deleteprescription/<pk>', views.deleteprescription, name = 'deleteprescription')
     
     # path('editAppointments', views.editAppointments, name = 'editAppointments')
 ]

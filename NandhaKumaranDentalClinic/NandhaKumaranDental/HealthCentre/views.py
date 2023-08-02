@@ -11,15 +11,15 @@ import datetime as dt
 from django.utils import timezone
 from django.shortcuts import render
 import sys
-if 'runserver' in sys.argv:
-    from .Whatsapptestfile import whatsappApi, openWhatsapp
-
+from .Whatsapptestfile import whatsappApi, openWhatsapp
+ 
 def index(request):
-    """ Function for displaying main page of website. """
     
-    # Editing response headers so as to ignore cached versions of pages
-    response = render(request,"HealthCentre/index.html")
-    return responseHeadersModifier(response)
+    """ Function for displaying main page of website. """
+    if 'runserver' in sys.argv:    
+        # Editing response headers so as to ignore cached versions of pages
+        response = render(request,"HealthCentre/index.html")
+        return responseHeadersModifier(response)
 
 def register(request):
     """ Function for registering a student into the portal. """
@@ -738,6 +738,7 @@ def onlineprescription(request):
                 return responseHeadersModifier(response)
 
         # Else if the user is not logged in
+        
         else:
 
             # Storing information inside context variable
@@ -755,6 +756,31 @@ def onlineprescription(request):
         # Editing response headers so as to ignore cached versions of pages
         response = render(request, "HealthCentre/prescriptionPortal.html")
         return responseHeadersModifier(response)
+    
+def editPrescription(request,pk):
+    request.session['prescriptionEdit'] = True
+    prescription = Prescription.objects.get(id=pk)
+    if request.method == "POST" :
+        doctor = Doctor.objects.get(emailHash = request.session['userEmail'])
+        records = doctor.doctorRecords.all()
+        prescriptionObject = prescription.objects.get(id=pk)
+        
+        if request.POST['selectedPatient'] == "":
+            prescriptionObject.prescriptionPatient = request.POST['PatientNameForPrescription']
+        else:
+            prescriptionObject.prescriptionPatient = request.POST['selectedPatient']
+
+    response = render(request, 'HealthCentre/NewPrescription.html')
+    return responseHeadersModifier(response)
+
+def deleteprescription(request, pk):
+    request.session['deletePrescription'] = True
+    delprescriptionobj = Prescription.objects.get(id=pk)
+    delprescriptionobj.delete()
+    doctor = Doctor.objects.get(emailHash = request.session['userEmail'])
+    records = doctor.doctorRecords.all()
+    response = render(request, 'HealthCentre/NewPrescription.html')
+    return responseHeadersModifier(response)
 
 def responseHeadersModifier(response):
     """Funtion to edit response headers so that no cached versions can be viewed. Returns the modified response."""
