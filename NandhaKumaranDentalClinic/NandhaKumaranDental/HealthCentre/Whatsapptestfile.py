@@ -43,10 +43,18 @@ class openWhatsapp():
     if creator.state != 'CONNECTED':
         raise Exception(creator.state)
 
-def whatsappApi(whatsappNumber):
+def whatsappApi(patientName, whatsappNumber, time, date):
     # reclient= openWhatsapp.client
-    phone_number = whatsappNumber #phone_number = "+917904427507"  # or "+201016708170"
-    message = "This is Dr.Nanda's Dental Clinic. Your Appointment is fixed at 12:30PM on 05-04-2023. Please do not forget your prescription!! Thansk!!"
+    phone_number = f"+91{whatsappNumber}" #phone_number = "+917904427507"  # or "+201016708170"
+    message = f"Dear, {patientName} This is Dr.Nanda's Dental Clinic. Your Appointment is fixed at {time} on {date}. Please do not forget your prescription!! Thansk!!"
+
+    # Simple message
+    result = openWhatsapp.client.sendText(phone_number, message)
+
+def whatsappApiEdit(patientName, whatsappNumber, time, date):
+    # reclient= openWhatsapp.client
+    phone_number = f"+91{whatsappNumber}" #phone_number = "+917904427507"  # or "+201016708170"
+    message = f"Dear, {patientName} This is Dr.Nanda's Dental Clinic. Your Appointment has been changed to {time} on {date}. Please do not forget your prescription!! Thansk!!"
 
     # Simple message
     result = openWhatsapp.client.sendText(phone_number, message)

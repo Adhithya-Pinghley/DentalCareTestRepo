@@ -82,8 +82,12 @@ NDC-Prescription
                 <td>Doctor Name : {{ prescription.prescribingDoctor }} </td>
                 <!-- <td>ID: {{ prescription.doctor }}</td> ID: {{ prescription.doctor }} -->
                 <td>Prescription : {{ prescription.prescriptionText }}</td>
+                <td>{% for medicine in prescription.medicine.all %}
+                  {{ medicine.MedicineName }}
+                  {% endfor %}
+                </td>
                 <td>{{ prescription.timestamp }}</td>
-                <td>{% if prescription.isCompleted %} prescription is completed {% else %} prescription is incomplete {% endif %} </td>
+                
             </tr>    
           {% endfor %}
         </tbody>

@@ -73,11 +73,9 @@ NDC-Sign Up
                         </div>
                     
                         <div class="col-6">
-                    <!-- {% if userType == Patient %} -->
+                    
                             <input name="userRollNo" type="text" id="userRollNo" class="form-control" placeholder="Patient Age">
-                    <!-- {% elif userType == Doctor %} -->
-                            <!-- <input name="userRollNo" type="text" class="form-control" placeholder="License Number"> -->
-                    <!-- {% endif %} -->
+                    
                         </div>   
                   </div>
 
@@ -120,12 +118,13 @@ NDC-Sign Up
                   <div class="form-row">
 
                         <div class="col-6">
-                            <input name="userPassword"type="password" class="form-control" placeholder="Password">
+                            <input name="userPassword"type="password" class="form-control" placeholder="Sex">
                         </div>
-
+                    {% if userType == 'doctor' %}
                         <div class="col-6">
                             <input name="userConfirmPassword" type="password" class="form-control" placeholder="Confirm Password">
                         </div>
+                    {% endif %}
 
                   </div>
                   <br>

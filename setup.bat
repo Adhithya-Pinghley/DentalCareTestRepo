@@ -29,9 +29,10 @@ IF %ERRORLEVEL% NEQ 0 (
 
 PAUSE
 echo postgres check...
-postgres --version
-IF %ERRORLEVEL% NEQ 0 (
+@REM postgres --version
+@REM IF %ERRORLEVEL% NEQ 0 (
 REM Define PostgreSQL version and download URL
+
 set PG_VERSION=15.2
 set PG_URL=https://get.enterprisedb.com/postgresql/postgresql-%PG_VERSION%-windows-x64-binaries.zip
 
@@ -41,16 +42,36 @@ set PG_DATA_DIR=C:\PostgreSQL\data
 
 REM Define password for the PostgreSQL 'postgres' user
 set PG_PASSWORD=12345
-echo downloading postgres...
-REM Download PostgreSQL installer using curl
-curl -O postgresql.zip %PG_URL%
+PAUSE
 
+REM create directory
+if not exist "pgsql" (
+    REM create directory
+    mkdir pgsql
+) else (
+    echo folder already exists...
+    
+)
+PAUSE
+cd pgsql
+if not exist "postgresql-15.2-2-windows-x64" (
+    echo downloading postgres...
+    
+    curl -O https://ftp.postgresql.org/pub/source/v15.2/postgresql-15.2.tar.bz2
+    echo downloaded postgres installer successfully...
+) else (
+    echo zip file already exists...skipping download
+)
+@REM curl -O postgresql.zip %PG_URL%
+PAUSE
 echo installing postgres...
+postgresql-15.2-2-windows-x64.exe
+@REM powershell -command "Expand-Archive -Path 'postgresql-15.2.tar'"
+PAUSE
 REM Unzip the PostgreSQL binaries
-powershell -Command "Expand-Archive -Path 'postgresql.zip' -DestinationPath '%PG_INSTALL_DIR%'"
-
+@REM powershell -Command "Expand-Archive -Path 'postgresql-15.2.tar'"
 REM Set up data directory
-mkdir "%PG_DATA_DIR%"
+@REM mkdir "%PG_DATA_DIR%"
 echo initializing database cluster...
 REM Initialize the database cluster
 "%PG_INSTALL_DIR%\pgsql\bin\initdb.exe" -D "%PG_DATA_DIR%"
@@ -63,9 +84,9 @@ REM Create a password for the 'postgres' user
 echo ALTER USER postgres WITH PASSWORD ^^^^'%PG_PASSWORD%^^^^'; | "%PG_INSTALL_DIR%\pgsql\bin\psql.exe" -U postgres
 
 echo PostgreSQL %PG_VERSION% has been installed successfully.
-) else (
-    echo postgres is already installed. requirement already satisfied.
-)
+@REM ) else (
+    @REM echo postgres is already installed. requirement already satisfied.
+@REM )
 PAUSE
 
 echo cloning from https://github.com/Adhithya-Pinghley/DentalCareTestRepo.git ...

@@ -1,19 +1,22 @@
 from django.contrib.auth import authenticate, login, logout
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
-from .models import Doctor, Patient, Prescription, passwordHasher, emailHasher, Appointment
+from .models import Doctor, Patient, Prescription, passwordHasher, emailHasher, Appointment, Medicine
 from django.db.models import Count, Q
 from django.contrib.auth.decorators import login_required
 from .forms import AppointmentSet, AppointmentSetForm, AppointmentForm
-from datetime import datetime, time
-import datetime as dt
+from datetime import datetime, time, timedelta
+import time
 from django.utils import timezone
 from django.shortcuts import render
+import threading
 import sys
-if 'runserver' in sys.argv:
-    from .Whatsapptestfile import whatsappApi, openWhatsapp
+import pyautogui
 
+if 'runserver' in sys.argv:
+    from .Whatsapptestfile import whatsappApi, openWhatsapp, whatsappApiEdit
+getPrescriptionID = 0
 def index(request):
     """ Function for displaying main page of website. """
     
@@ -44,27 +47,32 @@ def register(request):
         userAddress = request.POST["userAddress"]
         userContactNo = request.POST["userContactNo"]
         userPassword = request.POST["userPassword"]
-        userConfirmPassword = request.POST["userConfirmPassword"]
-
+        
+        userType = request.POST['userType']
+        if userType == 'patient':
+            userConfirmPassword = userPassword
+        elif userType == 'doctor':
+            userConfirmPassword = request.POST["userConfirmPassword"]
         # If both the passwords match
         if userPassword == userConfirmPassword:
 
             name = userFirstName + " " + userLastName
 
-            # Encrypting password to store inside database
-            passwordHash = passwordHasher(userPassword)
-
-            # Encrypting email to store inside database
-            emailHash = emailHasher(userEmail)
+            
 
             # handleSubmit(request)
             # def handleSubmit(request):
             
             
             # Creating a patient object and saving insdie the database if patient is selected 
-            userType = request.POST['userType']
+            
             if userType == 'patient':
                 # patient = Patient(rollNumber=request.POST['rollNumber'])
+                # Encrypting password to store inside database
+                passwordHash = userPassword
+
+                # Encrypting email to store inside database
+                emailHash = emailHasher(userEmail)
                 patient = Patient(name = name,rollNumber = userRollNo, email = userEmail, passwordHash = passwordHash, address = userAddress, contactNumber = userContactNo, emailHash = emailHash )
                 patient.save()
                     
@@ -83,6 +91,7 @@ def register(request):
 
             # Storing success message in the context variable
             context = {
+                "userType" : userType,
                 "message":"User Registration Successful. Please Login."
             }
 
@@ -141,13 +150,13 @@ def login(request):
                 numberNewPendingPrescriptions = doctor.doctorRecords.aggregate(newnewPendingPrescriptions = Count('pk', filter =( Q(isNew = True) & Q(isCompleted = False) ) ))['newnewPendingPrescriptions']
                 # Storing the same inside the session variables
                 request.session['numberNewPrescriptions'] = numberNewPendingPrescriptions
-
                 # Storing the required information inside the context variable
                 context = {
                     "message" : "Successfully Logged In.",
                     "isAuthenticated" : True,
                     "user": records.order_by('-timestamp'),
-                    "prescriptions" : Prescription.objects.all().order_by('timestamp')
+                    "prescriptions" : Prescription.objects.all().order_by('timestamp'),
+                    "prescMedicine" : Medicine.objects.all().order_by('id')
                 }
                 
                 # Editing response headers so as to ignore cached versions of pages
@@ -452,7 +461,7 @@ def doctorappointments(request):
                     'years' : year,
                     'minutes': minute,
                     "patients" : Patient.objects.all().order_by('id'),
-                    "prescPatients" : Appointment.objects.all().order_by('id')
+                    # "prescPatients" : Appointment.objects.all().order_by('id')
                     }
         response = render(request, 'HealthCentre/NewAppointment.html', context)
         return responseHeadersModifier(response)
@@ -466,7 +475,7 @@ def doctorappointments(request):
                 # prescpatient = request.POST['selectedPatient']
                 # patient_id = request.POST['selectedPatient'] 
                 # patient = Patient.objects.get(name=patient_id)
-            appointmentTime = request.POST['EnterTimeHour'] + request.POST['EnterTimeMinute']
+            appointmentTime = request.POST['EnterTimeHour'].zfill(2) + request.POST['EnterTimeMinute'].zfill(2)
             datetimeObject = datetime.strptime(appointmentTime, "%H%M")
             appointmentDate = request.POST['EnterDate'] + request.POST['EnterDateMonth'] + request.POST['EnterYear']
             dateobject = datetime.strptime(appointmentDate, "%d%m%Y")
@@ -484,7 +493,7 @@ def doctorappointments(request):
             "user": records.order_by('-timestamp'),
             "Appointments" : Appointment.objects.all().order_by('-date')
         }
-        whatsappNotification()
+        # whatsappNotification()
         response = render(request, 'HealthCentre/appointmentsPortal.html', context)
         return responseHeadersModifier(response)
 
@@ -509,7 +518,7 @@ def editAppointments(request, pk):
             # patient_id = request.POST['selectedPatient'] 
             # patient = Patient.objects.get(name=patient_id)
         
-        appointmentTime = request.POST['EnterTimeHour'] + request.POST['EnterTimeMinute']
+        appointmentTime = request.POST['EnterTimeHour'].zfill(2) + request.POST['EnterTimeMinute'].zfill(2)
         appointmentTime = datetime.strptime(appointmentTime, "%H%M")
         appointObject.time = appointmentTime
         appointmentDate = request.POST['EnterDate'] + request.POST['EnterDateMonth'] + request.POST['EnterYear']
@@ -519,6 +528,9 @@ def editAppointments(request, pk):
         appointObject.appointmentdoctor = request.session['Name']
         appointObject.subject = "subject"
         appointObject.save()
+        patientDetails = Patient.objects.get(name=appointObject.appointmentpatient)
+        patientNumber = patientDetails.contactNumber 
+        whatsappApiEdit(appointObject.appointmentpatient, patientNumber, appointObject.time, appointObject.date)
         # appointment = Appointment(time = datetimeObject, date = dateobject, subject = appointmentSubject, notes = appointmentNotes,
         #                             appointmentpatient = appointmentPatient, appointmentdoctor = appointmentDoctor)
         # appointment.save()
@@ -535,8 +547,8 @@ def editAppointments(request, pk):
         
     # hour = Appointment.objects.get()
     # hour = Appointment.objects.get(time=time)
-    hour = range(0, 24)
-    minute = range(0, 60)
+    hour = range(00, 24)
+    minute = range(00, 60)
     date = range(1, 32)
     month = range(1, 13)
     year = range(int(datetime.now().year), 2099)
@@ -592,23 +604,83 @@ def deleteappointment(request, pk):
     response = render(request, 'HealthCentre/appointmentsPortal.html', context)
     return responseHeadersModifier(response)
 
+selectedMedicineID = []
+def addingMedicineData(request, selectedMedicineValue):
 
+        try:
+            SelectedMedicine = Medicine.objects.get(MedicineName = selectedMedicineValue)
+            SelectedBeforeAfter = SelectedMedicine.beforeAfter
+            SelectedMorning = SelectedMedicine.Morning
+            SelectedAfternoon = SelectedMedicine.Afternoon
+            SelectedNight = SelectedMedicine.Night
+            medicineID = SelectedMedicine.pk
+            selectedMedicineID.append(medicineID)
+            # prescription = Prescription.objects.get(id= getPrescriptionID)
+            # prescription.medicine.add(medicineID)
+            data = {
+                "MedBefAft" : SelectedBeforeAfter,
+                "MedMorn" : SelectedMorning,
+                "medAft"   : SelectedAfternoon,
+                "medNight" : SelectedNight,
+                # "patients" : Patient.objects.all().order_by('id'),
+                # "prescPatients" : Prescription.objects.all().order_by('id'),
+                # "prescMedicines" : Medicine.objects.all().order_by('MedicineName')
+            }
+            return JsonResponse(data)
+            # response = render(request, "HealthCentre/NewPrescription.html", data)
+            # return responseHeadersModifier(response)
+        except Medicine.DoesNotExist:
+                return JsonResponse({'error': 'Medicine not found'}, status=404)
 
 def doctorprofile(request):
+    #  selectedMedicineValue = ""
      if request.method == 'GET':
-        
         request.session['writeNewPrescription'] = True
-        
-        context = {
-                    "patients" : Patient.objects.all().order_by('id'),
-                    "prescPatients" : Prescription.objects.all().order_by('id')
-                    
-                    }
-        response = render(request, "HealthCentre/NewPrescription.html", context)
-        return responseHeadersModifier(response)
 
+        if request.GET.get('SelectedMed') == None and request.GET.get('SelectedPat') == None:
+            context = {
+                    "patients" : Patient.objects.all().order_by('id'),
+                    # "prescPatients" : Prescription.objects.all().order_by('id'),
+                    "prescMedicines" : Medicine.objects.all().order_by('MedicineName')
+                    }
+            response = render(request, "HealthCentre/NewPrescription.html", context)
+            return responseHeadersModifier(response)
+        if request.GET.get('SelectedPat') != None and request.method == 'GET':
+            PatientName = request.GET.get('SelectedPat', None)
+            try: 
+                selectedPatient = Patient.objects.get(name = PatientName)
+                data = {
+                    "patientSex" : selectedPatient.passwordHash,
+                    "patientAge" : selectedPatient.rollNumber
+                }
+                return JsonResponse(data)
+            except Patient.DoesNotExist:
+                return JsonResponse({'error': 'Patient not found'}, status=404)
+
+        if request.GET.get('SelectedMed') != None and request.method == 'GET':
+    
+            MedicineName = request.GET.get('SelectedMed', None)
+            
+            try:
+                # SelectedMedicine = Medicine.objects.get(MedicineName = selectedMedicineValue)
+                SelectedMedicine = Medicine.objects.get(MedicineName = MedicineName)
+                SelectedBeforeAfter = SelectedMedicine.beforeAfter
+                SelectedMorning = SelectedMedicine.Morning
+                SelectedAfternoon = SelectedMedicine.Afternoon
+                SelectedNight = SelectedMedicine.Night
+                data = {
+                    "MedBefAft" : SelectedBeforeAfter,
+                    "MedMorn" : SelectedMorning,
+                    "medAft"   : SelectedAfternoon,
+                    "medNight" : SelectedNight,
+                }
+                return JsonResponse(data)
+            except Medicine.DoesNotExist:
+                return JsonResponse({'error': 'Medicine not found'}, status=404)
+            
      if request.method == 'POST':
-         if request.session['writeNewPrescription']:
+        
+        if request.session['writeNewPrescription']:
             if request.POST['selectedPatient'] == "":
                 prescpatient = request.POST['PatientName']
                 patient = Patient.objects.create(name=prescpatient)
@@ -617,22 +689,32 @@ def doctorprofile(request):
                 patient_id = request.POST['selectedPatient'] 
                 patient = Patient.objects.get(name=patient_id)
 
-            symptoms = request.POST["symptoms"]
+            symptoms = "dummy"#request.POST["symptoms"]
             if request.session['isLoggedIn'] and request.session['isDoctor']:
                 prescdoctor = request.session['Name']
                 # doctor = Doctor.objects.get(id=1)
                 doctor_id = request.session['Name']
                 doctor = Doctor.objects.get(name=doctor_id)
+                medicine = request.POST['SelectedMedicine']
+                MedicineObject = Medicine.objects.get(MedicineName = medicine)
+                medicineID = MedicineObject.pk
+                selectedMedicineID.append(medicineID)
+                selectedMedicines = Medicine.objects.filter(id__in = selectedMedicineID)
+                # MedName = MedicineObject.MedicineName
+                NoOfDays = request.POST['noOfDays']
                 # patient_id = request.POST['selectedPatient'] 
                 # patient = Patient.objects.get(name=patient_id)
-                prescriptiontext = request.POST['prescription']
-                prescription = Prescription(prescribingDoctor = prescdoctor, prescribingPatient = prescpatient ,doctor = doctor, patient= patient, symptoms = symptoms, prescriptionText = prescriptiontext)
+                prescriptiontext = "dummy"#request.POST['prescription']
+                prescription = Prescription(prescribingDoctor = prescdoctor, prescribingPatient = prescpatient ,doctor = doctor, patient= patient, symptoms = symptoms, prescriptionText = prescriptiontext, NoOfDays = NoOfDays) #medicine = medicine,
                 prescription.save()
+                global getPrescriptionID 
+                getPrescriptionID = prescription.pk
+                prescription.medicine.set(selectedMedicines)
             context = {
                     "prescriptions" : Prescription.objects.all().order_by('timestamp')
                 }
-         response = render(request, "HealthCentre/prescriptionportal.html", context)
-         return responseHeadersModifier(response)
+        response = render(request, "HealthCentre/prescriptionportal.html", context)
+        return responseHeadersModifier(response)
 
 def onlineprescription(request):
     """Function to submit online prescription request to doctor."""
@@ -788,16 +870,57 @@ def requestSessionInitializedChecker(request):
     return request
 
 def whatsappNotification():
-    # try:
-    #     whatsapp_number = WhatsAppNumber.objects.get(id=number_id)
-    #     return render(request, 'whatsapp_number.html', {'whatsapp_number': whatsapp_number})
-    # except WhatsAppNumber.DoesNotExist:
-    #     return render(request, 'error.html', {'message': 'WhatsApp number not found'})
 
-    
-    whatsappApi("+917904427507")
-openWhatsapp()
+    while True:
+        currentDateTime = datetime.now()
+        currentHourObj = datetime.strftime(currentDateTime, "%H")
+        currentMinuteObj = datetime.strftime(currentDateTime, "%M")
+        currentDateObj = datetime.strftime(currentDateTime, "%d")
+        currentMonthObj = datetime.strftime(currentDateTime, "%m")
+        currentYearObj = datetime.strftime(currentDateTime, "%Y")
 
+        strCurrenTimeObj = currentHourObj + currentMinuteObj
+        strCurrentDateObj = currentDateObj + currentMonthObj + currentYearObj 
+
+        plusthreehours=currentDateTime + timedelta(hours=3)
+        hourObject = datetime.strftime(plusthreehours, "%H")
+        minuteObject = datetime.strftime(plusthreehours, "%M")
+
+        strTimeObject = hourObject + minuteObject
+        datetimeObject = datetime.strptime(strTimeObject, "%H%M")
+        datetimeObject = datetimeObject.time()
+
+        currentDateTimeObj = datetime.strptime(strCurrenTimeObj, "%H%M")
+        currentDateTimeObj = currentDateTimeObj.time()
+
+        currentDate = datetime.strptime(strCurrentDateObj, "%d%m%Y")
+        currentDate = currentDate.date()
+        # getappointmentTime = Appointment.objects.get(time=datetimeObject)
+        try:
+            getAllAppointmentTime = Appointment.objects.filter(time=datetimeObject)
+
+        except Appointment.DoesNotExist:
+            for getappointmentTime in getAllAppointmentTime:
+                getappointmentTime = None
+        # time = models.TimeField(default=timezone.now)
+        # getappointmentTime = Appointment.objects.get_or_(time=datetimeObject)
+        for getappointmentTime in getAllAppointmentTime:
+            if not getappointmentTime == None:
+                AppointmentTime = getappointmentTime.time
+                AppointmentDate = getappointmentTime.date
+                patientName=getappointmentTime.appointmentpatient
+                patientDetail = Patient.objects.get(name=patientName)
+                patientNumber = patientDetail.contactNumber
+                if (AppointmentDate == currentDate):
+                    whatsappApi(patientName, patientNumber, AppointmentTime, AppointmentDate)
+                    time.sleep(60)
+
+def backgroundTask():
+    thread = threading.Thread(target=whatsappNotification)
+    thread.daemon = True
+    thread.start()
+
+backgroundTask()
 
 def searchAppointments(request):
     if request.method == "POST":
@@ -814,112 +937,11 @@ def searchAppointments(request):
         return responseHeadersModifier(response)
 
 
-
-
-
-
-
-
-
-
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+from django.template.loader import render_to_string
+import tempfile
+
+def generatePDF(request):
+    if request.method == "GET":
+        pyautogui.hotkey('ctrl', 'p')
+    time.sleep(60)
+    return HttpResponseRedirect(reverse("doctorprofile"))

@@ -21,12 +21,23 @@ class Patient(models.Model):
     address = models.CharField(max_length = 100)
     contactNumber = models.CharField(max_length = 10)
     email = models.EmailField(unique = True, max_length = 255)
-    rollNumber = models.CharField(unique = True, max_length = 8)
+    rollNumber = models.CharField(max_length = 8)
     passwordHash = models.CharField(max_length = 64)
     emailHash = models.CharField(max_length = 64)
 
     def __str__(self):
         return "Name : " + self.name + " Address : " + self.address + " Contact : " + self.contactNumber + " Email : " + self.email
+
+class Medicine(models.Model):
+    MedicineName = models.CharField(max_length= 200)
+    beforeAfter = models.CharField(max_length= 200)
+    Morning = models.CharField(max_length= 200)
+    Afternoon = models.CharField(max_length= 200)
+    Night   = models.CharField(max_length= 200)
+
+    def __str__(self):
+        return "\nMedicineName :" + str(self.MedicineName) + "\nBeforeAfter :" + str(self.beforeAfter) + "\nMorning :" + str(self.Morning) + "\nAfternoon :" + str(self.Afternoon) + "\nNight :" + str(self.Night) + "\n\n"
+
 
 class Prescription(models.Model):
     prescriptionText = models.CharField(max_length = 2000, default = "")
@@ -34,13 +45,17 @@ class Prescription(models.Model):
     prescribingPatient = models.CharField(max_length= 2000, default= "")
     doctor = models.ForeignKey(Doctor, related_name = "doctorRecords", on_delete = models.CASCADE)
     patient = models.ForeignKey(Patient, related_name = "patientRecords", on_delete = models.CASCADE)
-    timestamp = models.DateTimeField(auto_now_add = True)
+    # beforeafter = models.CharField(max_length= 10)
+    medicine    = models.ManyToManyField(to= Medicine)
+    # MornAftNight = models.CharField(max_length=10)
+    NoOfDays = models.CharField(max_length=10)
+    timestamp = models.DateTimeField(auto_now_add=True)
     isNew = models.BooleanField(default = True)
     isCompleted = models.BooleanField(default = False)
     symptoms = models.CharField(max_length = 2000)
 
     def __str__(self):
-        return "\nDoctor :" + str(self.doctor) + "\n\nPatient :" + str(self.patient) + "\n\nPrescription : \n\n" + self.prescriptionText + "\n\n"
+        return "\nDoctor :" + str(self.doctor) + "\n\nPatient :" + str(self.patient) + "\n\nPrescription : \n\n" + self.prescriptionText  + "\nNoOfDays :" + str(self.NoOfDays) + "\n\n" #+ "\nMedicine :" + str(self.medicine)
 
 class Appointment(models.Model):
     time = models.TimeField(default=timezone.now)
@@ -52,7 +67,7 @@ class Appointment(models.Model):
     AppointmentTimeStamp = models.DateTimeField(auto_now_add = True)#auto_now_add = True
 
     def __str__(self):
-        return "\nDoctor :" + str(self.appointmentdoctor) + "\n\nPatient" + str(self.appointmentpatient) +"\n\nDate :"+ str(self.date) + "\n\nTime :" + str(self.time) + "\n\nSubject :" + str(self.subject) + "\n\nnotes :" + str(self.notes)
+        return "\nDoctor :" + str(self.appointmentdoctor) + "\n\nPatient" + str(self.appointmentpatient) +"\n\nDate :"+ str(self.date) + "\n\nTime :" + str(self.time) + "\n\nSubject :" + str(self.subject) + "\n\nnotes :" + str(self.notes) + "\n\n"
     
 def passwordHasher(userPassword):
     """Function to return the hash of the password using SHA-256. Input is the password of the user in string."""
