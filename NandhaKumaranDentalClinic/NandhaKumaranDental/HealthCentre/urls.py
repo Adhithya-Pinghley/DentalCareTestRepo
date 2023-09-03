@@ -17,12 +17,15 @@ urlpatterns = [
     #path('doctorprofile/<str:selectedMedicineValue>', views.doctorprofile, name = "doctorprofile"),
     path('doctorappointments', views.doctorappointments, name = "doctorappointments"),
     path('searchAppointments', views.searchAppointments, name = "searchAppointments"),
+    path('searchPrescriptions', views.searchPrescriptions, name = "searchPrescriptions"),
     path('doctorappointmentsfalse', views.doctorappointmentsfalse, name = "doctorappointmentsfalse"),
     path('editAppointments/<pk>', views.editAppointments, name = 'editAppointments'),
     path('deleteappointment/<pk>', views.deleteappointment, name = 'deleteappointment'),
+    path('deleteprescription/<pk>', views.deleteprescription, name = 'deleteprescription'),
     path('addingMedicineData/<str:selectedMedicineValue>', views.addingMedicineData, name = 'addingMedicineData'),
-    path('generatePDF', views.generatePDF, name = "generatePDF")
-    
+    path('generatePDF', views.generatePDF, name = "generatePDF"), 
+    path('sendPdfinWhatsapp', views.sendPdfinWhatsapp, name = "sendPdfinWhatsapp"),
+    path('dummy', views.dummy, name = "dummy")
     # path('editAppointments', views.editAppointments, name = 'editAppointments')
 ]
 

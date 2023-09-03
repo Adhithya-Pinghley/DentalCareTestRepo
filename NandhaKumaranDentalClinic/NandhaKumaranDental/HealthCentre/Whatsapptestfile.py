@@ -58,3 +58,11 @@ def whatsappApiEdit(patientName, whatsappNumber, time, date):
 
     # Simple message
     result = openWhatsapp.client.sendText(phone_number, message)
+
+def whatsappMedia(whatsappNumber, pdfPathForWP):
+    phone_number = f"+91{whatsappNumber}"
+    path = pdfPathForWP
+    name = "dummy"
+    caption = "Dummy"
+    result = openWhatsapp.client.sendFile(phone_number, path, name, caption )
+    # message = openWhatsapp.client.sendMessageOptions()

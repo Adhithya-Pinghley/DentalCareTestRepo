@@ -61,11 +61,26 @@ NDC-Prescription
           padding: 10px;
         }
     </style>
+    <style>
+      .search-bar {
+        position: absolute;
+        right: 0;
+      }
+    </style>
+
+    <form class="search-bar" method="post" action="{% url 'searchPrescriptions' %}">
+      {% csrf_token %}
+      <div class="form-group">
+        <input name = "searchQuery" class="form-group" type="search" placeholder="Search Prescriptions" aria-label="Search">
+        <button class="form-group" type="submit">Search</button>
+        <!-- btn btn-outline-success my-2 my-sm-0 -->
+      </div>
+    </form>
 
     <table class = "prescription-table">
         <thead>
           <tr>
-            <th>  </th>
+            <!-- <th>  </th> -->
             <th>Patient Name</th>
             <th>Symptoms</th>
           </tr>
@@ -73,10 +88,11 @@ NDC-Prescription
         <tbody>
           {% for prescription in prescriptions %}    
             <tr class="prescription-row">
-                <td><button class="tree-toggle" data-prescription-id="{{ prescription.id }}">Edit</button></td>
+                <!-- <td><button class="tree-toggle" data-prescription-id="{{ prescription.id }}">Edit</button></td> -->
                 <!-- <div id="prescription-details-{{ prescription.id }}" class="prescription-details"></div>   -->
               <td>{{ prescription.prescribingPatient }}</td>
               <td>{{ prescription.symptoms }}</td>
+              <td><a class="button" href ="{% url 'deleteprescription' prescription.id %}">Delete</a></td>
             </tr>
             <tr class="prescription-details">
                 <td>Doctor Name : {{ prescription.prescribingDoctor }} </td>
@@ -90,6 +106,27 @@ NDC-Prescription
                 
             </tr>    
           {% endfor %}
+
+          {% for prescriptionPatientsearch in searchPrescriptionPatients %}
+          <tr class="prescription-row">
+            <!-- <td><button class="tree-toggle" data-prescription-id="{{ prescription.id }}">Edit</button></td> -->
+            <!-- <div id="prescription-details-{{ prescription.id }}" class="prescription-details"></div>   -->
+          <td>{{ prescriptionPatientsearch.prescribingPatient }}</td>
+          <td>{{ prescriptionPatientsearch.symptoms }}</td>
+          <td><a class="button" href ="{% url 'deleteprescription' prescriptionPatientsearch.id %}">Delete</a></td>
+        </tr>
+        <tr class="prescription-details">
+            <td>Doctor Name : {{ prescriptionPatientsearch.prescribingDoctor }} </td>
+            <!-- <td>ID: {{ prescription.doctor }}</td> ID: {{ prescription.doctor }} -->
+            <td>Prescription : {{ prescriptionPatientsearch.prescriptionText }}</td>
+            <td>{% for medicine in prescriptionPatientsearch.medicine.all %}
+              {{ medicine.MedicineName }}
+              {% endfor %}
+            </td>
+            <td>{{ prescriptionPatientsearch.timestamp }}</td>
+            
+        </tr>
+        {% endfor %}
         </tbody>
       </table>
       <script>

@@ -58,16 +58,19 @@ class Prescription(models.Model):
         return "\nDoctor :" + str(self.doctor) + "\n\nPatient :" + str(self.patient) + "\n\nPrescription : \n\n" + self.prescriptionText  + "\nNoOfDays :" + str(self.NoOfDays) + "\n\n" #+ "\nMedicine :" + str(self.medicine)
 
 class Appointment(models.Model):
+    # id = models.AutoField(primary_key=True)
     time = models.TimeField(default=timezone.now)
     date = models.DateField(default=timezone.now)
     subject = models.CharField(max_length=2000)
     notes = models.TextField()
+    doctorPres = models.ForeignKey(Doctor, related_name = "doctorPrescRecords", on_delete = models.CASCADE)
+    patientPres = models.ForeignKey(Patient, related_name = "patientPrescRecords", on_delete = models.CASCADE)
     appointmentpatient = models.CharField(max_length=2000, default = "")
     appointmentdoctor  = models.CharField(max_length=2000, default= "")
     AppointmentTimeStamp = models.DateTimeField(auto_now_add = True)#auto_now_add = True
 
     def __str__(self):
-        return "\nDoctor :" + str(self.appointmentdoctor) + "\n\nPatient" + str(self.appointmentpatient) +"\n\nDate :"+ str(self.date) + "\n\nTime :" + str(self.time) + "\n\nSubject :" + str(self.subject) + "\n\nnotes :" + str(self.notes) + "\n\n"
+        return "\nDoctorId :" + str(self.doctorPres) + "\nPatientId :" + str(self.patientPres) + "\nDoctor :" + str(self.appointmentdoctor) + "\n\nPatient" + str(self.appointmentpatient) +"\n\nDate :"+ str(self.date) + "\n\nTime :" + str(self.time) + "\n\nSubject :" + str(self.subject) + "\n\nnotes :" + str(self.notes) + "\n\n"
     
 def passwordHasher(userPassword):
     """Function to return the hash of the password using SHA-256. Input is the password of the user in string."""

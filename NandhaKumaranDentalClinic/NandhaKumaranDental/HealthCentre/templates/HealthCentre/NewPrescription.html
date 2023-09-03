@@ -46,7 +46,12 @@ NDC-Prescription
           visibility: hidden;
          } 
       }  
-      
+      .invisible{
+        display : none;
+      }
+      button.first{
+        position: absolute;
+      }
     </style>
     {% if request.session.isLoggedIn  %}
       {% if request.session.isDoctor %}
@@ -246,16 +251,83 @@ NDC-Prescription
               <label class="form-check-label" ><span class="badge badge-success">CONFIRM</span></label>
             </div>
           <div class="hide" >
-          <button type="submit" class="btn btn-warning">Write Prescription</button>
+            <!-- <button class="button first" id="generatePdfFile" align = "right" type ="submit" style="color:rgb(30, 126, 216); margin-left: 3%;" >Print/Save pdf</button> -->
+          <button id = "submit" type="submit" class="btn btn-warning first">Write Prescription</button>
         </div>
-          {% endif %}
-          
+        {% endif %}
         </form>
     </div>
       {% endif %}
       {% endif %}
       <script>
+        function sleep(milliseconds) {
+          const date = Date.now();
+          let currentDate = null;
+          do {
+            currentDate = Date.now();
+          } while (currentDate - date < milliseconds);
+        };
+        var pdfGnerated = false
+        var checkPdfSave = false
+        document.addEventListener('DOMContentLoaded', function () {
+          const confirmBox = document.getElementById("confirmCheck");
+          const pdfGenButton = document.getElementById("generatePdfFile");
+          confirmBox.addEventListener('click', function (event) {
+            var confirmUser = window.confirm("save as pdf?")
+            if (confirmUser) {
+              pdfGenButton.click();
+              checkPdfSave = true;
+              console.log('check', checkPdfSave);
+            }
+            else {
+               checkPdfSave = false;
+               
+                }
+              console.log('check', checkPdfSave);
+          });
+          
+        });
+        console.log('check', checkPdfSave);
+        document.addEventListener('DOMContentLoaded', function () {
+          const form = document.getElementById("prescriptionForm");
+          const submitbutton = document.getElementById("submit");
+          const pdfGenButton = document.getElementById("generatePdfFile");
+          // if (checkPdfSave == true) {
             
+          form.addEventListener('submit', function (event) {
+          
+            console.log('check', checkPdfSave);
+
+           if (checkPdfSave ==  true) {
+            const confirmMessage = "Do you want to send a pdf of this prescription to the Patient ?"
+            var userConfirmed = window.confirm(confirmMessage);
+            
+            if (userConfirmed) {
+              $.ajax({
+                type : 'POST',
+                url : "{% url 'dummy' %}",
+                data : {
+              csrfmiddlewaretoken: '{{ csrf_token }}',
+                }
+                    });
+              submitbutton.click();
+              
+            } 
+            else {
+              $.ajax("{% url 'dummy' %}", {
+                 method : "GET",
+                 data : {
+              csrfmiddlewaretoken: '{{ csrf_token }}',
+                }
+               });
+               submitbutton.click();
+              }
+            }
+          });
+        
+        });
+      
+        //})
         document.addEventListener("DOMContentLoaded", function() {
           var prescriptiontable = document.getElementById("addPrescription");
           var newmedicineRow = document.getElementById("addMedicine");
@@ -287,52 +359,33 @@ NDC-Prescription
             });
           });
         });
-      </script>
-      <script>
-        function captureFormAndGeneratePDF(){
-          const capturedHtml = document.getElementById('prescriptionForm').innerHTML;
-          $.ajax({
-            type : 'POST',
-            url : '{% url "generatePDF" %}',
-            data : {
-              'capturedHtml' : capturedHtml,
-              csrfmiddlewaretoken: '{{ csrf_token }}',
-            },
-            success : function(response){
-
-            },
-            error : function(error){
-
-            },
-          });
-        }
-      </script>
-      <script> 
-          $('#generatePdfFile').click(function() {
+    
+    
+    
+    
+        $('#generatePdfFile').click(function() {
             var pdfGenerator = $(this).val();
+            //confUser = window.confirm("save as pdf?");
+           // if (confUser) {
             $.ajax({
               method: 'GET',
               url : '{% url "generatePDF" %}',
               data : {'pdfGenerator' : pdfGenerator},
               dataType : 'json',
               success : function(data) {
-                ;//$('#patientSex').html(data.patientSex);
-                //$('#patientAge').html(data.patientAge);
-                // $('#afternoon').html(data.medAft);
-                // $('#night').html(data.medNight);
-                //$('#medicine-data').html(
-                  //    'BeforeAfter: ' +  data.MedBefAft +
-                    //  '<br> Morning: ' + data.MedMorn +
-                      //'<br> Afternoon: ' + data.medAft +
-                      //'<br> Night: ' + data.medNight
-                  
+                pdfGnerated = true            
               },
               error : function(xhr, status, error) {
                 console.error(xhr.responseText)
               }
             })
+            sleep(2000);
+          //}
           })
-
+        
+          
+          
+        
           $('#selectedPatient').change(function() {
             var PatientSelected = $(this).val();
             // var encodedName = encodeURIComponent(PatientSelected);

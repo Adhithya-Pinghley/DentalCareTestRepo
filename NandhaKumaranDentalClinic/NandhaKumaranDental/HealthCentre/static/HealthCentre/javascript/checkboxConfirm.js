@@ -5,7 +5,7 @@ function checkConfirm() {
     }
     else
     {
-       alert('Please tick confirm.');
+       alert('Please tick confirm.');  
        return false;
     }
 }
