@@ -17,10 +17,10 @@ class Doctor(models.Model):
         return "Name : " + self.name + " Address : " + self.address + " Contact : " + self.contactNumber + " Email : " + self.email + " Specialization : " + self.specialization
 
 class Patient(models.Model):
-    name = models.CharField(max_length = 30)
+    name = models.CharField(unique = True, max_length = 30)
     address = models.CharField(max_length = 100)
     contactNumber = models.CharField(max_length = 10)
-    email = models.EmailField(unique = True, max_length = 255)
+    email = models.EmailField(max_length = 255)
     rollNumber = models.CharField(max_length = 8)
     passwordHash = models.CharField(max_length = 64)
     emailHash = models.CharField(max_length = 64)
@@ -67,7 +67,7 @@ class Appointment(models.Model):
     patientPres = models.ForeignKey(Patient, related_name = "patientPrescRecords", on_delete = models.CASCADE)
     appointmentpatient = models.CharField(max_length=2000, default = "")
     appointmentdoctor  = models.CharField(max_length=2000, default= "")
-    AppointmentTimeStamp = models.DateTimeField(auto_now_add = True)#auto_now_add = True
+    AppointmentTimeStamp = models.DateTimeField(auto_now_add = True)#auto_now_add = True 
 
     def __str__(self):
         return "\nDoctorId :" + str(self.doctorPres) + "\nPatientId :" + str(self.patientPres) + "\nDoctor :" + str(self.appointmentdoctor) + "\n\nPatient" + str(self.appointmentpatient) +"\n\nDate :"+ str(self.date) + "\n\nTime :" + str(self.time) + "\n\nSubject :" + str(self.subject) + "\n\nnotes :" + str(self.notes) + "\n\n"
